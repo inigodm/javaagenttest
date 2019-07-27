@@ -1,0 +1,42 @@
+Cosas que hay que tener en cuenta:
+
+En el build.gradle hay que configurar el agente:
+
+jar {
+    archiveName = "${rootProject.name}-${rootProject.version}.jar"
+
+    //build fat jar
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }}
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.inigo.agent.Main',
+                'Premain-Class': 'com.inigo.agent.Agent',
+                'Agent-Class': 'com.inigo.agent.Agent',
+                'Can-Redefine-Classes': 'true',
+                'Can-Retransform-Classes': 'true',
+                'Can-Set-Native-Method-Prefix': 'true',
+                'Implementation-Title': "Agent",
+                'Implementation-Version': rootProject.version,
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version')
+        )
+    }
+}
+
+Y la dependencia de javaassits
+
+
+compile 'org.javassist:javassist:3.25.0-GA'
+
+En el codigo: importar los packages
+
+ClassPool cp = ClassPool.getDefault();
+cp.importPackage("com.inigo.agent");
+
+Al hacer el run que se quiere capturar hay que cargar los jars de la app, de javaassistr y el resto de los necesarios
+al principio en la VM y ademas meter el javaagent como parametros, ambos de la JVM:
+
+-DXbootclasspath/p:/home/inigo/projects/testing/test/lib/javaassit.jar:/home/inigo/projects/testing/agent/build/libs/agent-1.0-SNAPSHOT.jar
+-javaagent:/home/inigo/projects/testing/agent/build/libs/agent-1.0-SNAPSHOT.jar
